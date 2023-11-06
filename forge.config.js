@@ -27,4 +27,17 @@ module.exports = {
       config: {},
     },
   ],
+  publishers: [
+    {
+      name: '@electron-forge/publisher-github',
+      config: {
+        repository: {
+          owner: 'sunqing05',
+          name: 'my-electron-app'
+        },
+        prerelease: false,
+        draft: true
+      }
+    }
+  ],
 };
