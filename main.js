@@ -1,31 +1,53 @@
 const { app, BrowserWindow } = require('electron')
-// include the Node.js 'path' module at the top of your file
-const path = require('node:path')
 
-const createWindow = () => {
-  const win = new BrowserWindow({
+function createWindow () {
+  const mainWindow = new BrowserWindow({
     width: 800,
-    height: 600,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js')
+    height: 600
+  })
+
+  mainWindow.webContents.session.on('select-hid-device', (event, details, callback) => {
+    // Add events to handle devices being added or removed before the callback on
+    // `select-hid-device` is called.
+    mainWindow.webContents.session.on('hid-device-added', (event, device) => {
+      console.log('hid-device-added FIRED WITH', device)
+      // Optionally update details.deviceList
+    })
+
+    mainWindow.webContents.session.on('hid-device-removed', (event, device) => {
+      console.log('hid-device-removed FIRED WITH', device)
+      // Optionally update details.deviceList
+    })
+
+    event.preventDefault()
+    if (details.deviceList && details.deviceList.length > 0) {
+      callback(details.deviceList[0].deviceId)
     }
   })
 
-  win.loadFile('index.html')
+  mainWindow.webContents.session.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
+    if (permission === 'hid' && details.securityOrigin === 'file:///') {
+      return true
+    }
+  })
+
+  mainWindow.webContents.session.setDevicePermissionHandler((details) => {
+    if (details.deviceType === 'hid' && details.origin === 'file://') {
+      return true
+    }
+  })
+
+  mainWindow.loadFile('index.html')
 }
 
 app.whenReady().then(() => {
   createWindow()
 
-  app.on('activate', () => {
+  app.on('activate', function () {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })
 
-app.on('window-all-closed', () => {
+app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
 })
-
-
-const { updateElectronApp } = require('update-electron-app')
-updateElectronApp()
