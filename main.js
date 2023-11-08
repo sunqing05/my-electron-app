@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, ipcMain, nativeTheme } = require('electron')
 // include the Node.js 'path' module at the top of your file
 const path = require('node:path')
 
@@ -12,6 +12,18 @@ const createWindow = () => {
   })
 
   win.loadFile('index.html')
+
+  ipcMain.handle('dark-mode:toggle', () => {
+    if (nativeTheme.shouldUseDarkColors) {
+      nativeTheme.themeSource = 'light'
+    } else {
+      nativeTheme.themeSource = 'dark'
+    }
+  })
+
+  ipcMain.handle('dark-mode:system', () => {
+    nativeTheme.themeSource = 'system'
+  })
 }
 
 app.whenReady().then(() => {
